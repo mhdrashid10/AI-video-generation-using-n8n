@@ -8,17 +8,29 @@ The system integrates multiple AI and media services to generate script, voiceov
 ⚙️ Architecture
 
 Webhook Trigger
+
    ↓
+
 Groq (LLM) – Script Generation
+
    ↓
+
 Microsoft Edge TTS – Voiceover Generation
+
    ↓
+
 Pexels API – Stock Video Retrieval
+
    ↓
+
 Python (MoviePy) – Video & Audio Composition
+
    ↓
+
 Read File
+
    ↓
+
 Respond to Webhook (Returns MP4)
 
 🛠️ Technologies Used
