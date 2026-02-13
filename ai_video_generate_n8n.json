@@ -1,0 +1,222 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-video",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -848,
+        -64
+      ],
+      "id": "9b07f403-e6f6-47e7-b89f-7a360c603014",
+      "name": "Webhook",
+      "webhookId": "7393b6b1-bc49-4a8c-bdbe-b1d8a48c7297"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.pexels.com/videos/search?query=' + \"$json.body.topic\" + ' technology documentary cinematic&per_page=5' }}\n\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "H0NBmtYgR43bfFIcxTszRlwN8WvnYx74wl9lNAvkhoqGDioNCSaXA8iq"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        32
+      ],
+      "id": "4aba64bf-f582-4ccf-a6da-5a3760583be0",
+      "name": "Fetch Pexel Video"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "={{ '\"C:/Users/lenovo/AppData/Local/Programs/Python/Python313/Scripts/edge-tts.exe\" --text \"' + $json[\"choices\"][0][\"message\"][\"content\"].replace(/\"/g, '').replace(/\\n/g, ' ') + '\" --write-media \"C:/Users/lenovo/.n8n-files/audio.mp3\"' }}\n\n\n\n\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "2e72276c-4c1e-4a51-a324-39acb94f7739",
+      "name": "Generate audio",
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"llama-3.1-8b-instant\",\n  messages: [{\n    role: \"user\",\n    content: \"Write a short 30-second YouTube narration about \" + $json.body.topic + \" Return ONLY pure spoken narration text. No timestamps. No scene labels. No directions\"\n  }],\n  temperature: 0.7\n}) }}\n\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -608,
+        32
+      ],
+      "id": "2170c3d1-65ee-448c-b5a3-6529998efdaf",
+      "name": "Generate Script"
+    },
+    {
+      "parameters": {
+        "command": "={{ '\"C:/Users/lenovo/AppData/Local/Programs/Python/Python313/python.exe\" C:/Users/lenovo/.n8n-files/generate.py \"' + $json[\"videos\"][0][\"video_files\"][0][\"link\"] + '\"' }}\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -64
+      ],
+      "id": "f673d81f-2f39-46f7-b63f-ee5ee75f6877",
+      "name": "Create Final Video"
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:/Users/lenovo/.n8n-files/final_video.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        32
+      ],
+      "id": "160568e3-e201-4d98-a7f5-f88fb2c07b0f",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "options": {
+          "enableStreaming": true
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        -48
+      ],
+      "id": "d4e4fa6c-aaed-460f-bf88-9610a4589605",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pexel Video": {
+      "main": [
+        [
+          {
+            "node": "Create Final Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pexel Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Script": {
+      "main": [
+        [
+          {
+            "node": "Generate audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Final Video": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "06e6915d-ef45-4c42-8844-3436a2b84b69",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d35fc73ffe67ec014b32a7a3802ec9a4762f5fda74c8b1a48300ea201294946"
+  },
+  "id": "tGaLnhPbP8oOXZDR",
+  "tags": []
+}
