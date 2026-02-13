@@ -4,7 +4,9 @@
 This project implements a fully automated AI-powered video generation pipeline that converts a single topic input into a YouTube-ready MP4 video using a webhook trigger.
 
 The system integrates multiple AI and media services to generate script, voiceover, visuals, and final video composition without manual editing.
+
 ⚙️ Architecture
+
 Webhook Trigger
    ↓
 Groq (LLM) – Script Generation
